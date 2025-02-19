@@ -5,53 +5,55 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import com.studentdb.model.User;
+import com.studentdb.entity.User;
 import com.studentdb.service.UserService;
 
 @Controller
 @RequestMapping("/")
 public class HomeController {
 
-    private final UserService userService;
-
-    public HomeController(UserService userService) {
-        this.userService = userService;
-    }
+    @Autowired
+    private UserService userService;
 
     @GetMapping("/")
-    public String home(Model model) {
-        model.addAttribute("users", userService.getAllUsers());
-        return "home";
+    public String getAllUsers(Model model) {
+        List<User> users = userService.getAllUsers();
+        model.addAttribute("users", users);
+        return "home"; // This should be the name of your HTML file (user-list.html)
     }
 
     @GetMapping("/add")
-    public String addUserForm(Model model) {
+    public String showAddUserForm(Model model) {
         model.addAttribute("user", new User());
-        return "add-user";
+        return "add-user"; // This should be the name of your HTML file (add-user.html)
     }
 
     @PostMapping("/add")
-    public String addUser(@ModelAttribute User user) {
+    public String createUser(@ModelAttribute User user) {
         userService.saveUser(user);
-        return "redirect:/";
+        return "redirect:/"; // Redirect to the user list page
     }
 
     @GetMapping("/edit/{id}")
-    public String editUserForm(@PathVariable Long id, Model model) {
+    public String showEditUserForm(@PathVariable Long id, Model model) {
         User user = userService.getUserById(id);
-        model.addAttribute("user", user);
-        return "edit-user";
+        if (user != null) {
+            model.addAttribute("user", user);
+            return "edit-user"; // This should be the name of your HTML file (edit-user.html)
+        } else {
+            return "redirect:/"; // Redirect to the user list page if user not found
+        }
     }
 
     @PostMapping("/edit/{id}")
-    public String editUser(@PathVariable Long id, @ModelAttribute User user) {
+    public String updateUser(@PathVariable Long id, @ModelAttribute User user) {
         userService.updateUser(id, user);
-        return "redirect:/";
+        return "redirect:/"; // Redirect to the user list page
     }
 
     @GetMapping("/delete/{id}")
     public String deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
-        return "redirect:/";
+        return "redirect:/"; // Redirect to the user list page
     }
 }

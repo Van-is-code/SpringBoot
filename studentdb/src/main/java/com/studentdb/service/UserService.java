@@ -1,99 +1,39 @@
 package com.studentdb.service;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.ArrayList;
 import java.util.List;
-import com.studentdb.model.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.studentdb.data.DatabaseConnection;
+import com.studentdb.entity.User;
+import com.studentdb.repository.UserRepository;
 
 @Service
 public class UserService {
 
+    @Autowired
+    private UserRepository userRepository;
+
     public List<User> getAllUsers() {
-        List<User> users = new ArrayList<>();
-        String sql = "SELECT * FROM users";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                users.add(new User(rs.getInt("id"), rs.getString("name"), rs.getInt("age")));
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return users;
+        return userRepository.findAll();
     }
 
     public void saveUser(User user) {
-        String sql = "INSERT INTO users (name, age) VALUES (?, ?)";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, user.getName());
-            stmt.setInt(2, user.getAge());
-            stmt.executeUpdate();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        userRepository.save(user);
     }
 
     public User getUserById(Long id) {
-        User user = null;
-        String sql = "SELECT * FROM users WHERE id = ?";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setLong(1, id);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    user = new User(rs.getInt("id"), rs.getString("name"), rs.getInt("age"));
-                }
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return user;
+        return userRepository.findById(id).orElse(null);
     }
 
     public void updateUser(Long id, User user) {
-        String sql = "UPDATE users SET name = ?, age = ? WHERE id = ?";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, user.getName());
-            stmt.setInt(2, user.getAge());
-            stmt.setLong(3, id);
-            stmt.executeUpdate();
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        User existingUser = userRepository.findById(id).orElse(null);
+        if (existingUser != null) {
+            existingUser.setName(user.getName());
+            existingUser.setAge(user.getAge());
+            userRepository.save(existingUser);
         }
     }
 
     public void deleteUser(Long id) {
-        String sql = "DELETE FROM users WHERE id = ?";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setLong(1, id);
-            stmt.executeUpdate();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        userRepository.deleteById(id);
     }
 }
